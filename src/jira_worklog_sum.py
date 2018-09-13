@@ -12,11 +12,6 @@ import dateutil.parser
 import pytz
 import sys
 
-server_name=sys.argv[1]
-user_name=sys.argv[2]
-password=sys.argv[3]
-jira = JIRA(server_name, basic_auth=(user_name, password))
-
 def check_arguments():
   """ TODO: Use it somewhere """
   if len(sys.argv) < 3:
@@ -72,4 +67,8 @@ def main():
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
 if __name__ == '__main__':
+  server_name=sys.argv[1]
+  user_name=sys.argv[2]
+  password=sys.argv[3]
+  jira = JIRA(server_name, basic_auth=(user_name, password))
   main()
