@@ -11,6 +11,9 @@ from datetime import datetime, date
 import dateutil.parser
 import pytz
 import sys
+import xlsxwriter
+import calendar
+from dateutil.tz import tzlocal
 
 def check_arguments():
   """ TODO: Use it somewhere """
@@ -59,12 +62,38 @@ def main():
   logged_issues = jira.search_issues('worklogAuthor = currentUser() AND worklogDate >= startOfMonth() ORDER BY key ASC')
   total_time_in_seconds = 0
 
-  for issue in logged_issues:
+  workbook = xlsxwriter.Workbook('gomontir_jira.xlsx')
+  worksheet = workbook.add_worksheet()
+  worksheet.write('A1', server_name + ' worklog')
+  worksheet.write('A2', user_name)
+  worksheet.write('A3', 'Key')
+  worksheet.write('B3', 'Summary')
+
+  current_year = date.today().year
+  current_month = date.today().month
+  current_month_short_name = calendar.month_name[current_month][:3]
+  start_of_this_month = date(current_year, current_month, 1)
+  today = date.today()
+  delta = today - start_of_this_month
+
+  for i in range(1, delta.days + 2):
+    worksheet.write(2, 1+i, current_month_short_name + ' ' + str(i).zfill(2))
+
+  for j, issue in enumerate(logged_issues):
+
     for worklog in jira.worklogs(issue.key):
       if is_in_this_month(worklog.created) and is_author_the_same(worklog.author.name):
+        worksheet.write(3+j, 0, issue.key)
+        worksheet.write(3+j, 1, issue.fields.summary)
+
+        day_created = dateutil.parser.parse(worklog.created).astimezone(tzlocal()).day
+        worksheet.write(3+j, day_created + 1, read_time(worklog.timeSpent) / 3600)
+
         total_time_in_seconds += read_time(worklog.timeSpent)
 
+  workbook.close()
   print('Total hours spent:', total_time_in_seconds / 3600 )
+
 
 if __name__ == '__main__':
   server_name=sys.argv[1]
