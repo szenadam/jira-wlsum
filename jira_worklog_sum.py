@@ -10,6 +10,7 @@
     * FEATURE: Generate and excel spread sheet
     * Spread should be optional if the user wants the output to stdout
     * Unit tests
+    * Use getopts for arguments and option parsing
 """
 from jira import JIRA
 from datetime import datetime, date
@@ -104,4 +105,6 @@ def main():
   workbook.close()
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
-main()
+
+if __name__ == '__main__':
+  main()
