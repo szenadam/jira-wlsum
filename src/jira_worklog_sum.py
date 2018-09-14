@@ -129,6 +129,15 @@ def convert_seconds_to_hours(data_matrix):
       data_matrix[i][j] = round(time / 3600, 2)
   return data_matrix
 
+
+def get_columns_sum(data_matrix):
+  col_sums = []
+  zipped = zip(*data_matrix)
+  for d in zipped:
+    col_sums.append(sum(d))
+  return col_sums
+
+
 def generate_spreadsheet(data_matrix, workbook_name, start_row=0, start_col=0):
   """ Generate spreadsheet from data matrix """
   workbook = xlsxwriter.Workbook(workbook_name)
@@ -139,17 +148,24 @@ def generate_spreadsheet(data_matrix, workbook_name, start_row=0, start_col=0):
 
   data_matrix = convert_seconds_to_hours(data_matrix)
 
+  # Write row totals
+  row_sums = []
+  for i in range(row_length):
+    s = sum(data_matrix[i])
+    row_sums.append(s)
+  for i in range(row_length):
+    worksheet.write(start_row + i, start_col, row_sums[i])
+  worksheet.write(start_row + i + 1, start_col, sum(row_sums))
+
+  # Write data
   for i, data in enumerate(data_matrix):
     for j, time in enumerate(data):
-      worksheet.write(start_row + i, start_col + j, time)
+      worksheet.write(start_row + i, start_col + 1 + j, time)
 
-  col_sums = []
-  zipped = zip(*data_matrix)
-  for d in zipped:
-    col_sums.append(sum(d))
-
+  # Write column totals
+  col_sums = get_columns_sum(data_matrix)
   for i in range(column_length):
-    worksheet.write(start_row + row_length, start_col + i, col_sums[i])
+    worksheet.write(start_row + row_length, start_col + 1 + i, col_sums[i])
 
   workbook.close()
 
