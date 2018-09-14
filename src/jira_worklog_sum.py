@@ -148,6 +148,14 @@ def get_rows_sum(data_matrix):
     row_sums.append(s)
   return row_sums
 
+
+def create_description_matrix(logged_issues):
+  description = []
+  for issue in logged_issues:
+    description.append(tuple((issue.key, issue.fields.summary)))
+  return description
+
+
 def generate_spreadsheet(data_matrix, workbook_name, description_part_matrix=None, start_row=0, start_col=0):
   """ Generate spreadsheet from data matrix """
   workbook = xlsxwriter.Workbook(workbook_name)
@@ -157,21 +165,29 @@ def generate_spreadsheet(data_matrix, workbook_name, description_part_matrix=Non
   row_length = len(data_matrix)
   column_length = len(data_matrix[0])
 
+  # Write key and summary
+  desc_col_start_pos = start_col
+  for i, desc in enumerate(description_part_matrix):
+    for j, val in enumerate(desc):
+      worksheet.write(start_row + i, desc_col_start_pos + j, val)
+
   # Write row totals
+  row_totals_col_start_pos = desc_col_start_pos + j + 1
   row_sums = get_rows_sum(data_matrix)
   for i in range(row_length):
-    worksheet.write(start_row + i, start_col, row_sums[i])
-  worksheet.write(start_row + i + 1, start_col, sum(row_sums))
+    worksheet.write(start_row + i, row_totals_col_start_pos, row_sums[i])
+  worksheet.write(start_row + i + 1, row_totals_col_start_pos, sum(row_sums))
 
   # Write data
+  data_col_start_pos = row_totals_col_start_pos
   for i, data in enumerate(data_matrix):
     for j, time in enumerate(data):
-      worksheet.write(start_row + i, start_col + 1 + j, time)
+      worksheet.write(start_row + i, data_col_start_pos + 1 + j, time)
 
   # Write column totals
   col_sums = get_columns_sum(data_matrix)
   for i in range(column_length):
-    worksheet.write(start_row + row_length, start_col + 1 + i, col_sums[i])
+    worksheet.write(start_row + row_length, data_col_start_pos + 1 + i, col_sums[i])
 
   workbook.close()
 
@@ -180,7 +196,7 @@ def main():
   """ The main loop. """
 
   logged_issues = query_logged_issues()
-
+  calendar_description_matrix = create_description_matrix(logged_issues)
   worklogs = get_all_worklogs_for_issues(logged_issues)
 
   extracted_data = extract_data_from_worklogs(worklogs)
@@ -192,7 +208,7 @@ def main():
 
   calendar_matrix_data = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
 
-  generate_spreadsheet(calendar_matrix_data, "examlpe.xlsx")
+  generate_spreadsheet(calendar_matrix_data, "examlpe.xlsx", calendar_description_matrix)
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
 
