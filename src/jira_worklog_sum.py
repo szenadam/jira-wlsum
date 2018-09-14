@@ -17,50 +17,23 @@ from dateutil.tz import tzlocal
 from itertools import groupby
 from operator import itemgetter
 
+
 def check_arguments_number():
   """ TODO: Use it somewhere """
   if len(sys.argv) < 3:
     print('Not enough arguments!\nUsage: python jira_worklog_sum.py https://example.jira.com username password')
     exit(1)
 
-def convert_to_seconds(s):
-  """ Convert jira worklog format to seconds. Individual worklogs should only have
-  '<number>d', '<number>h', '<number>s'"""
-
-  seconds_per_unit = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
-  return int(s[:-1]) * seconds_per_unit[s[-1]]
-
-def read_time(time_spent):
-  """ Read and convert jira worklog hours to seconds.
-  TODO: What if the format is in '<number>d' or '<number>w' """
-
-  total_seconds = 0
-  if ' ' in time_spent:
-    (h, m) = time_spent.split(' ')
-    total_seconds += convert_to_seconds(h)
-    total_seconds += convert_to_seconds(m)
-  else:
-    total_seconds += convert_to_seconds(time_spent)
-  return total_seconds
-
-def is_in_this_month(time_created):
-  """ Need to check each worklog, otherwise it would sum every time spent for the
-  current user. Hopefully the worklog.created is in UTC0. """
-
-  created = dateutil.parser.parse(time_created)
-  today = datetime.today()
-  if created > datetime(today.year,today.month,1,0,0,0,0,pytz.UTC):
-    return True
-  else:
-    return False
 
 def get_logged_issues():
   logged_issues = jira.search_issues('worklogAuthor = currentUser() AND worklogDate >= startOfMonth() ORDER BY key ASC')
   return logged_issues
 
+
 def is_author_the_same(name):
   """ Check if author is the same as currentUser() """
   return name == user_name
+
 
 def get_all_worklogs_for_issues(issues):
   worklogs = []
@@ -68,6 +41,7 @@ def get_all_worklogs_for_issues(issues):
     for worklog in jira.worklogs(issue.key):
       worklogs.append(worklog)
   return worklogs
+
 
 def extract_data_from_worklogs(worklogs):
   data = []
@@ -80,12 +54,14 @@ def extract_data_from_worklogs(worklogs):
     data.append(d)
   return data
 
+
 def get_last_worklog_day(data):
   last_day = 0
   for d in data:
     if d['dayStarted'] > last_day:
       last_day = d['dayStarted']
   return last_day
+
 
 def sum_up_worklog_for_a_day(data):
   grouper = itemgetter("issueId", "dayStarted")
@@ -96,11 +72,14 @@ def sum_up_worklog_for_a_day(data):
     result.append(temp_dict)
   return result
 
+
 def get_worklogs_total_seconds(data):
   total = 0
   for d in data:
     total += d['timeSpentSeconds']
   return total
+
+
 def main():
   """ The main loop. Loop through all logged issues in this month by the currentUser
   then loop through all the worklogs in that issue. """
