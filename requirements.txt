@@ -1,0 +1,4 @@
+jira
+pytest
+xlsxwriter
+natsort

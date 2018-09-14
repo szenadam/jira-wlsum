@@ -11,32 +11,27 @@ from datetime import datetime, date
 import dateutil.parser
 import pytz
 import sys
+import xlsxwriter
+import calendar
+from dateutil.tz import tzlocal
+from itertools import groupby
+from operator import itemgetter
+from natsort import natsorted
 
-def check_arguments():
-  """ TODO: Use it somewhere """
+def check_arguments_number():
+  """ TODO: Later will be removed when getopts is implemented. """
   if len(sys.argv) < 3:
-    print('Usage: python jira_worklog_sum.py https://example.jira.com username password')
+    print('Not enough arguments!\nUsage: python jira_worklog_sum.py https://example.jira.com username password')
     exit(1)
 
-def convert_to_seconds(s):
-  """ Convert jira worklog format to seconds. Individual worklogs should only have
-  '<number>d', '<number>h', '<number>s'"""
 
-  seconds_per_unit = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
-  return int(s[:-1]) * seconds_per_unit[s[-1]]
+def query_logged_issues():
+  """ Query the issues where worklogs were made by the currently logged in user
+    TODO: Later should handle dates if teh user is interested in a different time range.
+  """
+  logged_issues = jira.search_issues('worklogAuthor = currentUser() AND worklogDate >= startOfMonth() ORDER BY key ASC')
+  return logged_issues
 
-def read_time(time_spent):
-  """ Read and convert jira worklog hours to seconds.
-  TODO: What if the format is in '<number>d' or '<number>w' """
-
-  total_seconds = 0
-  if ' ' in time_spent:
-    (h, m) = time_spent.split(' ')
-    total_seconds += convert_to_seconds(h)
-    total_seconds += convert_to_seconds(m)
-  else:
-    total_seconds += convert_to_seconds(time_spent)
-  return total_seconds
 
 def is_in_this_month(time_created):
   """ Need to check each worklog, otherwise it would sum every time spent for the
@@ -49,24 +44,176 @@ def is_in_this_month(time_created):
   else:
     return False
 
-def is_author_the_same(name):
-  return name == user_name
+
+def get_all_worklogs_for_issues(issues):
+  """ Extract all worklog objects into a list. Add issue key to the worklog object. """
+  worklogs = []
+  for issue in issues:
+    for worklog in jira.worklogs(issue.key):
+      if is_in_this_month(worklog.started):
+        worklog.key = issue.key
+        worklogs.append(worklog)
+  return worklogs
+
+
+def extract_data_from_worklogs(worklogs):
+  """ Extract only the necessary attribues from the worklog objects. """
+  data = []
+  for worklog in worklogs:
+    d = {}
+    d['issueKey'] = worklog.key
+    # The results should be in the local timezone. JIRA stores it in UTC0
+    d['dayStarted'] = dateutil.parser.parse(worklog.started).astimezone(tzlocal()).day
+    d['timeSpentSeconds'] = worklog.timeSpentSeconds
+    data.append(d)
+  return data
+
+
+def get_last_worklog_day(data):
+  """ Last day that has a worklog. Used for the calendar matrix width. """
+  last_day = 0
+  for d in data:
+    if d['dayStarted'] > last_day:
+      last_day = d['dayStarted']
+  return last_day
+
+
+def sum_up_worklog_for_a_day(data):
+  """ Key function for aggregating the time spent in an issue a day. """
+  grouper = itemgetter("issueKey", "dayStarted")
+  result = []
+  for key, grp in groupby(sorted(data, key = grouper), grouper):
+    temp_dict = dict(zip(["issueKey", "dayStarted"], key))
+    temp_dict["timeSpentSeconds"] = sum(item["timeSpentSeconds"] for item in grp)
+    result.append(temp_dict)
+  return result
+
+
+def get_worklogs_total_seconds(data):
+  """ Sum up all the time spent. """
+  total = 0
+  for d in data:
+    total += d['timeSpentSeconds']
+  return total
+
+
+def get_uniq_keys(data):
+  """ Create list of unique issue keys from the data. """
+  uniq = []
+  l = list({v['issueKey']:v for v in data}.values())
+  for d in l:
+    uniq.append(d['issueKey'])
+  return uniq
+
+
+def create_calendar_data_matrix(rows, columns, data):
+  """ Create the calendar data matrix from an extracted worklog list.
+    TODO: Needs to be simplified later for readability, modularity, etc.
+  """
+  calendar_matrix = [[0 for x in range(columns)] for y in range(rows)]
+  summed_up_data = sum_up_worklog_for_a_day(data)
+  sorted_data = natsorted(summed_up_data, key=lambda k: k['issueKey'])
+  uniq_keys = get_uniq_keys(sorted_data)
+
+  for i, key in enumerate(uniq_keys):
+    for worklog in sorted_data:
+      if worklog['issueKey'] == key:
+        calendar_matrix[int(i)][int(worklog['dayStarted']-1)] = worklog['timeSpentSeconds']
+
+  return calendar_matrix
+
+
+def convert_seconds_to_hours(data_matrix):
+  """ Convert seconds to hours """
+  for i, data in enumerate(data_matrix):
+    for j, time in enumerate(data):
+      data_matrix[i][j] = round(time / 3600, 2)
+  return data_matrix
+
+
+def get_columns_sum(data_matrix):
+  """ Sum up columns in a 2D data matrix """
+  col_sums = []
+  zipped = zip(*data_matrix)
+  for d in zipped:
+    col_sums.append(sum(d))
+  return col_sums
+
+
+def get_rows_sum(data_matrix):
+  """ Sum up rows in a 2D data matrix """
+  row_sums = []
+  for i in range(len(data_matrix)):
+    s = sum(data_matrix[i])
+    row_sums.append(s)
+  return row_sums
+
+
+def create_description_matrix(logged_issues):
+  description = []
+  for issue in logged_issues:
+    description.append(tuple((issue.key, issue.fields.summary)))
+  return description
+
+
+def generate_spreadsheet(data_matrix, workbook_name, description_part_matrix=None, start_row=0, start_col=0):
+  """ Generate spreadsheet from data matrix """
+  workbook = xlsxwriter.Workbook(workbook_name)
+  worksheet = workbook.add_worksheet()
+
+  data_matrix = convert_seconds_to_hours(data_matrix)
+  row_length = len(data_matrix)
+  column_length = len(data_matrix[0])
+
+  # Write key and summary
+  desc_col_start_pos = start_col
+  for i, desc in enumerate(description_part_matrix):
+    for j, val in enumerate(desc):
+      worksheet.write(start_row + i, desc_col_start_pos + j, val)
+
+  # Write row totals
+  row_totals_col_start_pos = desc_col_start_pos + j + 1
+  row_sums = get_rows_sum(data_matrix)
+  for i in range(row_length):
+    worksheet.write(start_row + i, row_totals_col_start_pos, row_sums[i])
+  worksheet.write(start_row + i + 1, row_totals_col_start_pos, sum(row_sums))
+
+  # Write data
+  data_col_start_pos = row_totals_col_start_pos
+  for i, data in enumerate(data_matrix):
+    for j, time in enumerate(data):
+      worksheet.write(start_row + i, data_col_start_pos + 1 + j, time)
+
+  # Write column totals
+  col_sums = get_columns_sum(data_matrix)
+  for i in range(column_length):
+    worksheet.write(start_row + row_length, data_col_start_pos + 1 + i, col_sums[i])
+
+  workbook.close()
+
 
 def main():
-  """ The main loop. Loop through all logged issues in this month by the currentUser
-  then loop through all the worklogs in that issue. """
+  """ The main loop. """
 
-  logged_issues = jira.search_issues('worklogAuthor = currentUser() AND worklogDate >= startOfMonth() ORDER BY key ASC')
-  total_time_in_seconds = 0
+  logged_issues = query_logged_issues()
+  calendar_description_matrix = create_description_matrix(logged_issues)
+  worklogs = get_all_worklogs_for_issues(logged_issues)
 
-  for issue in logged_issues:
-    for worklog in jira.worklogs(issue.key):
-      if is_in_this_month(worklog.created) and is_author_the_same(worklog.author.name):
-        total_time_in_seconds += read_time(worklog.timeSpent)
+  extracted_data = extract_data_from_worklogs(worklogs)
 
+  total_time_in_seconds = get_worklogs_total_seconds(extracted_data)
+
+  number_of_issues = len(logged_issues)
+  last_day = get_last_worklog_day(extracted_data)
+
+  calendar_matrix_data = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
+
+  generate_spreadsheet(calendar_matrix_data, "examlpe.xlsx", calendar_description_matrix)
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
+
 if __name__ == '__main__':
+  check_arguments_number()
   server_name=sys.argv[1]
   user_name=sys.argv[2]
   password=sys.argv[3]
