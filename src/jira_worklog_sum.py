@@ -33,13 +33,26 @@ def query_logged_issues():
   return logged_issues
 
 
+def is_in_this_month(time_created):
+  """ Need to check each worklog, otherwise it would sum every time spent for the
+  current user. Hopefully the worklog.created is in UTC0. """
+
+  created = dateutil.parser.parse(time_created)
+  today = datetime.today()
+  if created > datetime(today.year,today.month,1,0,0,0,0,pytz.UTC):
+    return True
+  else:
+    return False
+
+
 def get_all_worklogs_for_issues(issues):
   """ Extract all worklog objects into a list. Add issue key to the worklog object. """
   worklogs = []
   for issue in issues:
     for worklog in jira.worklogs(issue.key):
-      worklog.key = issue.key
-      worklogs.append(worklog)
+      if is_in_this_month(worklog.started):
+        worklog.key = issue.key
+        worklogs.append(worklog)
   return worklogs
 
 
@@ -85,8 +98,7 @@ def get_worklogs_total_seconds(data):
 
 
 def main():
-  """ The main loop. Loop through all logged issues in this month by the currentUser
-  then loop through all the worklogs in that issue. """
+  """ The main loop. """
 
   logged_issues = query_logged_issues()
 
