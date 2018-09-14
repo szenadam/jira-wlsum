@@ -98,24 +98,30 @@ def get_worklogs_total_seconds(data):
 
 
 def get_uniq_keys(data):
+  """ Create list of unique issue keys from the data. """
   uniq = []
   l = list({v['issueKey']:v for v in data}.values())
   for d in l:
     uniq.append(d['issueKey'])
   return uniq
 
-def create_calendar_matrix(rows, columns, data):
+
+def create_calendar_data_matrix(rows, columns, data):
+  """ Create the calendar data matrix from an extracted worklog list.
+    TODO: Needs to be simplified later for readability, modularity, etc.
+  """
   calendar_matrix = [[0 for x in range(columns)] for y in range(rows)]
   summed_up_data = sum_up_worklog_for_a_day(data)
   sorted_data = natsorted(summed_up_data, key=lambda k: k['issueKey'])
   uniq_keys = get_uniq_keys(sorted_data)
 
-  for i, k in enumerate(uniq_keys):
-    for j, l in enumerate(sorted_data):
-      if l['issueKey'] == k:
-        calendar_matrix[int(i)][int(l['dayStarted']-1)] = l['timeSpentSeconds']
+  for i, key in enumerate(uniq_keys):
+    for worklog in sorted_data:
+      if worklog['issueKey'] == key:
+        calendar_matrix[int(i)][int(worklog['dayStarted']-1)] = worklog['timeSpentSeconds']
 
   return calendar_matrix
+
 
 def main():
   """ The main loop. """
@@ -130,7 +136,7 @@ def main():
 
   number_of_issues = len(logged_issues)
   last_day = get_last_worklog_day(extracted_data)
-  calendar_matrix = create_calendar_matrix(number_of_issues, last_day, extracted_data)
+  calendar_matrix = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
 
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
