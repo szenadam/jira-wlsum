@@ -124,6 +124,7 @@ def create_calendar_data_matrix(rows, columns, data):
 
 
 def convert_seconds_to_hours(data_matrix):
+  """ Convert seconds to hours """
   for i, data in enumerate(data_matrix):
     for j, time in enumerate(data):
       data_matrix[i][j] = round(time / 3600, 2)
@@ -131,6 +132,7 @@ def convert_seconds_to_hours(data_matrix):
 
 
 def get_columns_sum(data_matrix):
+  """ Sum up columns in a 2D data matrix """
   col_sums = []
   zipped = zip(*data_matrix)
   for d in zipped:
@@ -138,21 +140,25 @@ def get_columns_sum(data_matrix):
   return col_sums
 
 
-def generate_spreadsheet(data_matrix, workbook_name, start_row=0, start_col=0):
+def get_rows_sum(data_matrix):
+  """ Sum up rows in a 2D data matrix """
+  row_sums = []
+  for i in range(len(data_matrix)):
+    s = sum(data_matrix[i])
+    row_sums.append(s)
+  return row_sums
+
+def generate_spreadsheet(data_matrix, workbook_name, description_part_matrix=None, start_row=0, start_col=0):
   """ Generate spreadsheet from data matrix """
   workbook = xlsxwriter.Workbook(workbook_name)
   worksheet = workbook.add_worksheet()
 
+  data_matrix = convert_seconds_to_hours(data_matrix)
   row_length = len(data_matrix)
   column_length = len(data_matrix[0])
 
-  data_matrix = convert_seconds_to_hours(data_matrix)
-
   # Write row totals
-  row_sums = []
-  for i in range(row_length):
-    s = sum(data_matrix[i])
-    row_sums.append(s)
+  row_sums = get_rows_sum(data_matrix)
   for i in range(row_length):
     worksheet.write(start_row + i, start_col, row_sums[i])
   worksheet.write(start_row + i + 1, start_col, sum(row_sums))
@@ -183,9 +189,10 @@ def main():
 
   number_of_issues = len(logged_issues)
   last_day = get_last_worklog_day(extracted_data)
-  calendar_matrix = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
 
-  generate_spreadsheet(calendar_matrix, "examlpe.xlsx")
+  calendar_matrix_data = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
+
+  generate_spreadsheet(calendar_matrix_data, "examlpe.xlsx")
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
 
