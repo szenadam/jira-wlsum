@@ -16,7 +16,7 @@ import calendar
 from dateutil.tz import tzlocal
 from itertools import groupby
 from operator import itemgetter
-
+from natsort import natsorted
 
 def check_arguments_number():
   """ TODO: Later will be removed when getopts is implemented. """
@@ -114,6 +114,8 @@ def main():
   calendar_matrix = [[0 for x in range(w)] for y in range(h)]
 
   summed_up_data = sum_up_worklog_for_a_day(extracted_data)
+
+  sorted_data = natsorted(summed_up_data, key=lambda k: k['issueKey'])
 
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
