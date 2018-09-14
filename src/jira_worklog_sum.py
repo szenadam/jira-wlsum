@@ -19,23 +19,22 @@ from operator import itemgetter
 
 
 def check_arguments_number():
-  """ TODO: Use it somewhere """
+  """ TODO: Later will be removed when getopts is implemented. """
   if len(sys.argv) < 3:
     print('Not enough arguments!\nUsage: python jira_worklog_sum.py https://example.jira.com username password')
     exit(1)
 
 
-def get_logged_issues():
+def query_logged_issues():
+  """ Query the issues where worklogs were made by the currently logged in user
+    TODO: Later should handle dates if teh user is interested in a different time range.
+  """
   logged_issues = jira.search_issues('worklogAuthor = currentUser() AND worklogDate >= startOfMonth() ORDER BY key ASC')
   return logged_issues
 
 
-def is_author_the_same(name):
-  """ Check if author is the same as currentUser() """
-  return name == user_name
-
-
 def get_all_worklogs_for_issues(issues):
+  """ Extract all worklog objects into a list. Add issue key to the worklog object. """
   worklogs = []
   for issue in issues:
     for worklog in jira.worklogs(issue.key):
@@ -45,6 +44,7 @@ def get_all_worklogs_for_issues(issues):
 
 
 def extract_data_from_worklogs(worklogs):
+  """ Extract only the necessary attribues from the worklog objects. """
   data = []
   for worklog in worklogs:
     d = {}
@@ -57,6 +57,7 @@ def extract_data_from_worklogs(worklogs):
 
 
 def get_last_worklog_day(data):
+  """ Last day that has a worklog. Used for the calendar matrix width. """
   last_day = 0
   for d in data:
     if d['dayStarted'] > last_day:
@@ -65,6 +66,7 @@ def get_last_worklog_day(data):
 
 
 def sum_up_worklog_for_a_day(data):
+  """ Key function for aggregating the time spent in an issue a day. """
   grouper = itemgetter("issueKey", "dayStarted")
   result = []
   for key, grp in groupby(sorted(data, key = grouper), grouper):
@@ -75,6 +77,7 @@ def sum_up_worklog_for_a_day(data):
 
 
 def get_worklogs_total_seconds(data):
+  """ Sum up all the time spent. """
   total = 0
   for d in data:
     total += d['timeSpentSeconds']
@@ -85,7 +88,7 @@ def main():
   """ The main loop. Loop through all logged issues in this month by the currentUser
   then loop through all the worklogs in that issue. """
 
-  logged_issues = get_logged_issues()
+  logged_issues = query_logged_issues()
 
   worklogs = get_all_worklogs_for_issues(logged_issues)
 
