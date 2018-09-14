@@ -5,12 +5,12 @@ JIRA Worklog Sum
 
 Sum your logged hours in JIRA for the current month.
 
-## Requirements
-  * Python 3.6+ (https://www.python.org/downloads/)
-  * jira package (https://jira.readthedocs.io/en/master/installation.html)
+## Install dependencies
+```
+$ pip install -r requirements.txt
+```
 
 ## Usage:
-
 ```
 $ python jira_worklog_sum.py https://example.jira.com username password
 ```
@@ -18,6 +18,11 @@ $ python jira_worklog_sum.py https://example.jira.com username password
 ## Example output:
 ```
 $ Total hours spent: 10.2
+```
+
+## Run tests
+```
+$ pytest
 ```
 
 ## TODO:
