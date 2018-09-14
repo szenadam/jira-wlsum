@@ -122,6 +122,17 @@ def create_calendar_data_matrix(rows, columns, data):
 
   return calendar_matrix
 
+def generate_spreadsheet(data_matrix, workbook_name, start_row=0, start_col=0):
+  """ Generate spreadsheet from data matrix """
+  workbook = xlsxwriter.Workbook(workbook_name)
+  worksheet = workbook.add_worksheet()
+
+  for i, data in enumerate(data_matrix):
+    for j, time in enumerate(data):
+      worksheet.write(start_row + i, start_col + j, time)
+
+  workbook.close()
+
 
 def main():
   """ The main loop. """
@@ -138,6 +149,7 @@ def main():
   last_day = get_last_worklog_day(extracted_data)
   calendar_matrix = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
 
+  generate_spreadsheet(calendar_matrix, "examlpe.xlsx")
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
 
