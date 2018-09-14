@@ -39,6 +39,7 @@ def get_all_worklogs_for_issues(issues):
   worklogs = []
   for issue in issues:
     for worklog in jira.worklogs(issue.key):
+      worklog.key = issue.key
       worklogs.append(worklog)
   return worklogs
 
@@ -47,7 +48,7 @@ def extract_data_from_worklogs(worklogs):
   data = []
   for worklog in worklogs:
     d = {}
-    d['issueId'] = worklog.issueId
+    d['issueKey'] = worklog.key
     # The results should be in the local timezone. JIRA stores it in UTC0
     d['dayStarted'] = dateutil.parser.parse(worklog.started).astimezone(tzlocal()).day
     d['timeSpentSeconds'] = worklog.timeSpentSeconds
@@ -64,10 +65,10 @@ def get_last_worklog_day(data):
 
 
 def sum_up_worklog_for_a_day(data):
-  grouper = itemgetter("issueId", "dayStarted")
+  grouper = itemgetter("issueKey", "dayStarted")
   result = []
   for key, grp in groupby(sorted(data, key = grouper), grouper):
-    temp_dict = dict(zip(["issueId", "dayStarted"], key))
+    temp_dict = dict(zip(["issueKey", "dayStarted"], key))
     temp_dict["timeSpentSeconds"] = sum(item["timeSpentSeconds"] for item in grp)
     result.append(temp_dict)
   return result
