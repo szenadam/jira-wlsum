@@ -209,9 +209,25 @@ def main():
 
   calendar_matrix_data = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
 
-  generate_spreadsheet(calendar_matrix_data, "examlpe.xlsx", calendar_description_matrix)
+  generate_spreadsheet(calendar_matrix_data, 'examlpe.xlsx', calendar_description_matrix)
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
+
+def usage():
+  print("""
+  Options:
+    -h --help
+        Print this help.
+    -s --server http://jira.example.com
+        JIRA server address.
+    -u --username UserName
+        Username.
+    -p --password SecretPassword
+        Password.
+  Usage Example:
+    $ python jira_worklog_sum.py  -s https://example.jira.com -u username -p password
+  """)
+  print('')
 
 if __name__ == '__main__':
   try:
