@@ -12,13 +12,14 @@ $ pip install -r requirements.txt
 
 ## Usage:
 ```
-$ python jira_worklog_sum.py https://example.jira.com username password
+$ python jira_worklog_sum.py -s https://example.jira.com -u username -p password
 ```
 
 ## Example output:
 ```
 $ Total hours spent: 10.2
 ```
+Also there should be a file in the directory you executed the script. (E.g: `jira-worklog-2018-01-01.xlsx`)
 
 ## Run tests
 ```
@@ -32,11 +33,3 @@ $ pytest
   * LONGTERM FEATURE: Eventually should create a REST API around it. Maybe with Flask or Django
   * Spreadsheet should be optional if the user wants the output to stdout
   * Unit tests
-  * Use getopts for arguments and option parsing
-    * Option: total only
-    * Option: stdout output
-    * Option: CSV output
-    * Option: xlsx output
-    * Argument: server
-    * Argument: username
-    * Argument: password

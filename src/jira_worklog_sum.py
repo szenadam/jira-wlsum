@@ -17,12 +17,7 @@ from dateutil.tz import tzlocal
 from itertools import groupby
 from operator import itemgetter
 from natsort import natsorted
-
-def check_arguments_number():
-  """ TODO: Later will be removed when getopts is implemented. """
-  if len(sys.argv) < 3:
-    print('Not enough arguments!\nUsage: python jira_worklog_sum.py https://example.jira.com username password')
-    exit(1)
+import getopt
 
 
 def query_logged_issues():
@@ -156,7 +151,7 @@ def create_description_matrix(logged_issues):
   return description
 
 
-def generate_spreadsheet(data_matrix, workbook_name, description_part_matrix=None, start_row=0, start_col=0):
+def generate_spreadsheet(data_matrix, workbook_name='worklog.xlsx', description_part_matrix=None, start_row=0, start_col=0):
   """ Generate spreadsheet from data matrix """
   workbook = xlsxwriter.Workbook(workbook_name)
   worksheet = workbook.add_worksheet()
@@ -208,14 +203,52 @@ def main():
 
   calendar_matrix_data = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
 
-  generate_spreadsheet(calendar_matrix_data, "examlpe.xlsx", calendar_description_matrix)
+  generate_spreadsheet(calendar_matrix_data, output_name, calendar_description_matrix)
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
 
+def usage():
+  print("""Options:
+    -h --help
+        Print this help.
+    -s --server http://jira.example.com
+        JIRA server address.
+    -u --username UserName
+        Username.
+    -p --password SecretPassword
+        Password.
+  Usage Example:
+    $ python jira_worklog_sum.py  -s https://example.jira.com -u username -p password
+  """)
+
 if __name__ == '__main__':
-  check_arguments_number()
-  server_name=sys.argv[1]
-  user_name=sys.argv[2]
-  password=sys.argv[3]
+  output_name = 'jira-worklog-'+str(date.today())+'.xlsx'
+
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], 'hs:u:p:o:', ['help', 'server=', 'username=' 'password=', 'output='])
+  except getopt.GetoptError as err:
+    print(err)
+    usage()
+    exit(1)
+
+  for op, arg in opts:
+    if op in ('-h', '--help'):
+      usage()
+      exit(1)
+    elif op in ('-s', '--server'):
+      server_name = arg
+    elif op in ('-u', '--username'):
+      user_name = arg
+    elif op in ('-p', '--password'):
+      password = arg
+    elif op in ('-o', '--output'):
+      print(arg)
+      if arg[-4:] != 'xlsx':
+        print('Invalid output filetype!')
+        exit(1)
+      output_name = arg
+    else:
+      assert False, "unhandled option"
+
   jira = JIRA(server_name, basic_auth=(user_name, password))
   main()
