@@ -225,7 +225,7 @@ if __name__ == '__main__':
   output_name = 'jira-worklog-'+str(date.today())+'.xlsx'
 
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'hs:u:p:o', ['help', 'server=', 'username=' 'password=', 'output='])
+    opts, args = getopt.getopt(sys.argv[1:], 'hs:u:p:o:', ['help', 'server=', 'username=' 'password=', 'output='])
   except getopt.GetoptError as err:
     print(err)
     usage()
