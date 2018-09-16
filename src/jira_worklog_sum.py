@@ -17,6 +17,7 @@ from dateutil.tz import tzlocal
 from itertools import groupby
 from operator import itemgetter
 from natsort import natsorted
+import getopt
 
 def check_arguments_number():
   """ TODO: Later will be removed when getopts is implemented. """
@@ -213,9 +214,25 @@ def main():
 
 
 if __name__ == '__main__':
-  check_arguments_number()
-  server_name=sys.argv[1]
-  user_name=sys.argv[2]
-  password=sys.argv[3]
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], 'hsup', ['help', 'server=', 'username' 'password'])
+  except getopt.GetoptError as err:
+    print(err)
+    usage()
+    exit(1)
+
+  for op, arg in opts:
+    if op in ('-h', '--help'):
+      usage()
+      exit(1)
+    elif op in ('-s', '--server'):
+      server_name = arg
+    elif op in ('-u', '--username'):
+      user_name = arg
+    elif op in ('-p', '--password'):
+      password = arg
+    else:
+      assert False, "unhandled option"
+
   jira = JIRA(server_name, basic_auth=(user_name, password))
   main()
