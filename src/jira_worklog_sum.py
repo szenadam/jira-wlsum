@@ -151,7 +151,7 @@ def create_description_matrix(logged_issues):
   return description
 
 
-def generate_spreadsheet(data_matrix, workbook_name, description_part_matrix=None, start_row=0, start_col=0):
+def generate_spreadsheet(data_matrix, workbook_name='worklog.xlsx', description_part_matrix=None, start_row=0, start_col=0):
   """ Generate spreadsheet from data matrix """
   workbook = xlsxwriter.Workbook(workbook_name)
   worksheet = workbook.add_worksheet()
@@ -203,13 +203,12 @@ def main():
 
   calendar_matrix_data = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
 
-  generate_spreadsheet(calendar_matrix_data, 'examlpe.xlsx', calendar_description_matrix)
+  generate_spreadsheet(calendar_matrix_data, 'jira-worklog-'+user_name+'-'+str(date.today())+'.xlsx', calendar_description_matrix)
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
 
 def usage():
-  print("""
-  Options:
+  print("""Options:
     -h --help
         Print this help.
     -s --server http://jira.example.com
@@ -221,11 +220,10 @@ def usage():
   Usage Example:
     $ python jira_worklog_sum.py  -s https://example.jira.com -u username -p password
   """)
-  print('')
 
 if __name__ == '__main__':
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'hsup', ['help', 'server=', 'username' 'password'])
+    opts, args = getopt.getopt(sys.argv[1:], 'hs:u:p:', ['help', 'server=', 'username=' 'password='])
   except getopt.GetoptError as err:
     print(err)
     usage()
