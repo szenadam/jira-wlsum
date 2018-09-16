@@ -19,12 +19,6 @@ from operator import itemgetter
 from natsort import natsorted
 import getopt
 
-def check_arguments_number():
-  """ TODO: Later will be removed when getopts is implemented. """
-  if len(sys.argv) < 3:
-    print('Not enough arguments!\nUsage: python jira_worklog_sum.py https://example.jira.com username password')
-    exit(1)
-
 
 def query_logged_issues():
   """ Query the issues where worklogs were made by the currently logged in user
