@@ -203,7 +203,7 @@ def main():
 
   calendar_matrix_data = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
 
-  generate_spreadsheet(calendar_matrix_data, 'jira-worklog-'+user_name+'-'+str(date.today())+'.xlsx', calendar_description_matrix)
+  generate_spreadsheet(calendar_matrix_data, output_name, calendar_description_matrix)
   print('Total hours spent:', total_time_in_seconds / 3600 )
 
 
@@ -222,8 +222,10 @@ def usage():
   """)
 
 if __name__ == '__main__':
+  output_name = 'jira-worklog-'+str(date.today())+'.xlsx'
+
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'hs:u:p:', ['help', 'server=', 'username=' 'password='])
+    opts, args = getopt.getopt(sys.argv[1:], 'hs:u:p:o', ['help', 'server=', 'username=' 'password=', 'output='])
   except getopt.GetoptError as err:
     print(err)
     usage()
@@ -239,6 +241,12 @@ if __name__ == '__main__':
       user_name = arg
     elif op in ('-p', '--password'):
       password = arg
+    elif op in ('-o', '--output'):
+      print(arg)
+      if arg[-4:] != 'xlsx':
+        print('Invalid output filetype!')
+        exit(1)
+      output_name = arg
     else:
       assert False, "unhandled option"
 
