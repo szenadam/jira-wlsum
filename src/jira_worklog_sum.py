@@ -31,7 +31,7 @@ def generate_spreadsheet(extracted_data, workbook_name='worklog.xlsx', start_row
     # Write row totals
     row_totals_col_start_pos = desc_col_start_pos + j + 1
     row_sums = worklogmatrix.row_sums
-    for i in range(worklogmatrix.rows_len):
+    for i in range(worklogmatrix.number_of_rows):
         worksheet.write(start_row + i, row_totals_col_start_pos, row_sums[i])
     worksheet.write(start_row + i + 1, row_totals_col_start_pos, sum(row_sums))
 
@@ -42,8 +42,8 @@ def generate_spreadsheet(extracted_data, workbook_name='worklog.xlsx', start_row
             worksheet.write(start_row + i, data_col_start_pos + 1 + j, time)
 
     # Write column totals
-    for i in range(worklogmatrix.cols_len):
-        worksheet.write(start_row + worklogmatrix.rows_len, data_col_start_pos + 1 + i, worklogmatrix.col_sums[i])
+    for i in range(worklogmatrix.number_of_columns):
+        worksheet.write(start_row + worklogmatrix.number_of_rows, data_col_start_pos + 1 + i, worklogmatrix.col_sums[i])
 
     workbook.close()
 

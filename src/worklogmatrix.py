@@ -1,16 +1,18 @@
 from itertools import groupby
 from operator import itemgetter
 from natsort import natsorted
+from datetime import date
 
 
 class WorklogMatrix:
     def __init__(self, extracted_data):
+        self.uniq_keys = self.get_uniq_keys(extracted_data)
+        self.number_of_rows = len(self.uniq_keys)
+        self.number_of_columns = self.number_of_days_in_this_month()
         self.data_matrix = self.create_calendar_data_matrix(extracted_data)
         self.description_matrix = self.create_description_matrix(extracted_data)
         self.row_sums = self.get_rows_sum(self.data_matrix)
         self.col_sums = self.get_columns_sum(self.data_matrix)
-        self.rows_len = len(extracted_data)
-        self.cols_len = len(extracted_data[0])
 
 
     def get_uniq_keys(self, data):
@@ -32,13 +34,20 @@ class WorklogMatrix:
             result.append(temp_dict)
         return result
 
+
+    def number_of_days_in_this_month(self):
+        today = date.today()
+        current_month_first_day = date(today.year, today.month, 1)
+        diff = today - current_month_first_day
+        return diff.days + 1
+
+
     def create_calendar_data_matrix(self, data):
         """ Create the calendar data matrix from an extracted worklog list.
-          TODO: Needs to be simplified later for readability, modularity, etc.
+            TODO: Needs to be simplified later for readability, modularity, etc.
         """
-        number_of_rows = len(data) ### BUG: we need the number of unique jira tickets
-        number_of_columns = len(data[0]) ### BUG: the nummber of days
-        calendar_matrix = [[0 for x in range(number_of_columns)] for y in range(number_of_rows)]
+
+        calendar_matrix = [[0 for x in range(self.number_of_columns)] for y in range(self.number_of_rows)]
         summed_up_data = self.sum_up_worklog_for_a_day(data)
         sorted_data = natsorted(summed_up_data, key=lambda k: k['issueKey'])
         uniq_keys = self.get_uniq_keys(sorted_data)
@@ -74,7 +83,13 @@ class WorklogMatrix:
         return row_sums
 
     def create_description_matrix(self, extracted_data):
+        key_and_summary = []
+        for d in extracted_data:
+            key_and_summary.append(tuple((d['issueKey'], d['summary'])))
+
         description = []
-        for data in extracted_data:
-            description.append(tuple((data.key, data.summary)))
+        for data in key_and_summary:
+            if data in description:
+                continue
+            description.append(tuple((data[0], data[1])))
         return description
