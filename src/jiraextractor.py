@@ -45,6 +45,7 @@ class JiraExtractor():
       for worklog in self.jira.worklogs(issue.key):
         if self.is_in_this_month(worklog.started):
           worklog.key = issue.key
+          worklog.summary = issue.fields.summary
           worklogs.append(worklog)
     return worklogs
 
@@ -55,6 +56,7 @@ class JiraExtractor():
     for worklog in worklogs:
       d = {}
       d['issueKey'] = worklog.key
+      d['summary'] = worklog.summary
       # The results should be in the local timezone. JIRA stores it in UTC0
       d['dayStarted'] = dateutil.parser.parse(worklog.started).astimezone(tzlocal()).day
       d['timeSpentSeconds'] = worklog.timeSpentSeconds
