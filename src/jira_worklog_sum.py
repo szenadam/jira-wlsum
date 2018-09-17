@@ -126,21 +126,10 @@ def main(server_name, user_name, password):
 
   jira = JiraExtractor(server_name, user_name, password)
 
-  logged_issues = jira.query_logged_issues()
-  calendar_description_matrix = create_description_matrix(logged_issues)
-  worklogs = jira.get_all_worklogs_for_issues(logged_issues)
-
-  extracted_data = jira.extract_data_from_worklogs(worklogs)
-
-  total_time_in_seconds = jira.get_worklogs_total_seconds(extracted_data)
-
-  number_of_issues = len(logged_issues)
-  last_day = jira.get_last_worklog_day(extracted_data)
-
-  calendar_matrix_data = create_calendar_data_matrix(number_of_issues, last_day, extracted_data)
-
+  calendar_description_matrix = create_description_matrix(jira.logged_issues)
+  calendar_matrix_data = create_calendar_data_matrix(jira.number_of_issues, jira.last_day, jira.extracted_data)
   generate_spreadsheet(calendar_matrix_data, output_name, calendar_description_matrix)
-  print('Total hours spent:', total_time_in_seconds / 3600 )
+  print('Total hours spent:', jira.total_time_in_seconds / 3600 )
 
 
 def usage():
@@ -153,6 +142,8 @@ def usage():
         Username.
     -p --password SecretPassword
         Password.
+    -o --output output.xlsx
+        The output file name. Must end with .xlsx!
   Usage Example:
     $ python jira_worklog_sum.py  -s https://example.jira.com -u username -p password
   """)

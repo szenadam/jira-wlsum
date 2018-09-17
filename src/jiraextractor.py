@@ -10,6 +10,12 @@ class JiraExtractor():
     self.username = username
     self.password = password
     self.jira = JIRA(self.server, basic_auth=(self.username, self.password))
+    self.logged_issues = self.query_logged_issues()
+    self.worklogs = self.get_all_worklogs_for_issues(self.logged_issues)
+    self.extracted_data = self.extract_data_from_worklogs(self.worklogs)
+    self.total_time_in_seconds = self.get_worklogs_total_seconds(self.extracted_data)
+    self.number_of_issues = len(self.logged_issues)
+    self.last_day = self.get_last_worklog_day(self.extracted_data)
 
 
   def query_logged_issues(self):
