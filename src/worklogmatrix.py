@@ -6,8 +6,7 @@ from datetime import date
 
 class WorklogMatrix:
     def __init__(self, extracted_data):
-        self.uniq_keys = self.get_uniq_keys(extracted_data)
-        self.number_of_rows = len(self.uniq_keys)
+        self.number_of_rows = self.get_number_of_rows(extracted_data)
         self.number_of_columns = self.number_of_days_in_this_month()
         self.data_matrix = self.create_calendar_data_matrix(extracted_data)
         self.description_matrix = self.create_description_matrix(extracted_data)
@@ -22,6 +21,11 @@ class WorklogMatrix:
         for d in l:
             uniq.append(d['issueKey'])
         return uniq
+
+
+    def get_number_of_rows(self, extracted_data):
+        uniq_keys = self.get_uniq_keys(extracted_data)
+        return len(uniq_keys)
 
 
     def sum_up_worklog_for_a_day(self, data):
