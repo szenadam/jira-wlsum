@@ -7,12 +7,8 @@ import pytz
 class JiraExtractor():
   def __init__(self, server, username, password):
     self.jira = JIRA(server, basic_auth=(username, password))
-    self.logged_issues = self.query_logged_issues()
-    self.worklogs = self.get_all_worklogs_for_issues(self.logged_issues)
-    self.extracted_data = self.extract_data_from_worklogs(self.worklogs)
+    self.extracted_data = self.extract_data_from_worklogs()
     self.total_time_in_seconds = self.get_worklogs_total_seconds(self.extracted_data)
-    self.number_of_issues = len(self.logged_issues)
-    self.last_day = self.get_last_worklog_day(self.extracted_data)
 
 
   def query_logged_issues(self):
@@ -47,8 +43,10 @@ class JiraExtractor():
     return worklogs
 
 
-  def extract_data_from_worklogs(self, worklogs):
+  def extract_data_from_worklogs(self):
     """ Extract only the necessary attribues from the worklog objects. """
+    logged_issues = self.query_logged_issues()
+    worklogs = self.get_all_worklogs_for_issues(logged_issues)
     data = []
     for worklog in worklogs:
       d = {}
@@ -60,14 +58,6 @@ class JiraExtractor():
       data.append(d)
     return data
 
-
-  def get_last_worklog_day(self, data):
-    """ Last day that has a worklog. Used for the calendar matrix width. """
-    last_day = 0
-    for d in data:
-      if d['dayStarted'] > last_day:
-        last_day = d['dayStarted']
-    return last_day
 
   def get_worklogs_total_seconds(self, data):
     """ Sum up all the time spent. """
