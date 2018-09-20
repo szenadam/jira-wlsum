@@ -6,10 +6,7 @@ import pytz
 
 class JiraExtractor():
   def __init__(self, server, username, password):
-    self.server = server
-    self.username = username
-    self.password = password
-    self.jira = JIRA(self.server, basic_auth=(self.username, self.password))
+    self.jira = JIRA(server, basic_auth=(username, password))
     self.logged_issues = self.query_logged_issues()
     self.worklogs = self.get_all_worklogs_for_issues(self.logged_issues)
     self.extracted_data = self.extract_data_from_worklogs(self.worklogs)
