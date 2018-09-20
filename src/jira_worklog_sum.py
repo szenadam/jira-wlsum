@@ -10,6 +10,7 @@ from jiraextractor import JiraExtractor
 from worklogmatrix import WorklogMatrix
 
 from datetime import date
+import calendar
 import sys
 import xlsxwriter
 import getopt
@@ -22,29 +23,42 @@ def generate_spreadsheet(extracted_data, workbook_name='worklog.xlsx', start_row
 
     worklogmatrix = WorklogMatrix(extracted_data)
 
+    # Write headers
+    headers = ['Key', 'Summary', 'Sum']
+    for i, h in enumerate(headers):
+        worksheet.write(start_row, start_col + i, h)
+    t = date.today()
+    m = calendar.month_abbr[t.month]
+    for i in range(t.day): # Write month and days
+        day = str(i+1).zfill(2)
+        worksheet.write(start_row, 3 + i, "{0} {1}".format(m ,day))
+
     # Write key and summary
+    desc_row_start_pos = start_row + 1
     desc_col_start_pos = start_col
     for i, desc in enumerate(worklogmatrix.description_matrix):
         for j, val in enumerate(desc):
-            worksheet.write(start_row + i, desc_col_start_pos + j, val)
-    worksheet.write(i + 1, j, "Sum")
+            worksheet.write(desc_row_start_pos + i, desc_col_start_pos + j, val)
+    worksheet.write(i + 2, j, 'Sum')
 
     # Write row totals
     row_totals_col_start_pos = desc_col_start_pos + j + 1
     row_sums = worklogmatrix.row_sums
     for i in range(worklogmatrix.number_of_rows):
-        worksheet.write(start_row + i, row_totals_col_start_pos, row_sums[i])
-    worksheet.write(start_row + i + 1, row_totals_col_start_pos, sum(row_sums))
+        worksheet.write(desc_row_start_pos + i, row_totals_col_start_pos, row_sums[i])
+    worksheet.write(desc_row_start_pos + i + 1, row_totals_col_start_pos, sum(row_sums))
 
     # Write data
     data_col_start_pos = row_totals_col_start_pos
     for i, data in enumerate(worklogmatrix.data_matrix):
         for j, time in enumerate(data):
-            worksheet.write(start_row + i, data_col_start_pos + 1 + j, time)
+            worksheet.write(desc_row_start_pos + i, data_col_start_pos + 1 + j, time)
 
     # Write column totals
     for i in range(worklogmatrix.number_of_columns):
-        worksheet.write(start_row + worklogmatrix.number_of_rows, data_col_start_pos + 1 + i, worklogmatrix.col_sums[i])
+        start_row_pos = desc_row_start_pos + worklogmatrix.number_of_rows
+        start_col_pos = data_col_start_pos + 1 + i
+        worksheet.write(start_row_pos, start_col_pos, worklogmatrix.col_sums[i])
 
     workbook.close()
 
