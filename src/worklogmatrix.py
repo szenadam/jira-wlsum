@@ -24,6 +24,7 @@ class WorklogMatrix:
 
 
     def get_number_of_rows(self, extracted_data):
+        """ The number of tickets that have worklogs in this month by the currentUser """
         uniq_keys = self.get_uniq_keys(extracted_data)
         return len(uniq_keys)
 
@@ -40,6 +41,7 @@ class WorklogMatrix:
 
 
     def number_of_days_in_this_month(self):
+        """ In the data matrix this equals to the number of columns """
         today = date.today()
         current_month_first_day = date(today.year, today.month, 1)
         diff = today - current_month_first_day
