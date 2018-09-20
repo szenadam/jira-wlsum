@@ -27,6 +27,7 @@ def generate_spreadsheet(extracted_data, workbook_name='worklog.xlsx', start_row
     for i, desc in enumerate(worklogmatrix.description_matrix):
         for j, val in enumerate(desc):
             worksheet.write(start_row + i, desc_col_start_pos + j, val)
+    worksheet.write(i + 1, j, "Sum")
 
     # Write row totals
     row_totals_col_start_pos = desc_col_start_pos + j + 1
