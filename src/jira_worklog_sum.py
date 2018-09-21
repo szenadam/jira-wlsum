@@ -86,11 +86,18 @@ def main(server_name, user_name, password):
     """ The main function. Initialize jira extractor, and generate spreadsheet. """
 
     jira = JiraExtractor(server_name, user_name, password)
-    worklog_matrix = WorklogMatrix(jira.extracted_data)
-    ##generate_spreadsheet(jira.extracted_data, output_name)
+    extracted_data = jira.extracted_data
+    worklog_matrix = WorklogMatrix(extracted_data)
+    data_matrix = worklog_matrix.data_matrix
+    description_matrix = worklog_matrix.description_matrix
 
-    csv_data = merge_data_and_desc(worklog_matrix.description_matrix, worklog_matrix.data_matrix)
-    print_csv_data(csv_data)
+    if output_spreadsheet == True:
+        generate_spreadsheet(extracted_data, output_name)
+
+    if output_csv == True:
+        csv_data = merge_data_and_desc(description_matrix, data_matrix)
+        print_csv_data(csv_data)
+
     print('Total hours spent:', jira.total_time_in_seconds / 3600)
 
 
@@ -117,9 +124,12 @@ if __name__ == '__main__':
     user_name = ''
     password = ''
     opts, args = [], []
+    output_csv = False
+    output_spreadsheet = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hs:u:p:o:', ['help', 'server=', 'username=' 'password=', 'output='])
+        opts, args = getopt.getopt(sys.argv[1:], 'tchs:u:p:o:',
+            ['sheet', 'csv', 'help', 'server=', 'username=' 'password=', 'output='])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -141,6 +151,10 @@ if __name__ == '__main__':
                 print('Invalid output filetype!')
                 exit(1)
             output_name = arg
+        elif op in ('-c', '--csv'):
+            output_csv = True
+        elif op in ('-t', '--sheet'):
+            output_spreadsheet = True
         else:
             assert False, "unhandled option"
     main(server_name, user_name, password)
