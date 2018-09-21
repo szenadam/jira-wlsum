@@ -14,6 +14,7 @@ import calendar
 import sys
 import xlsxwriter
 import getopt
+import csv
 
 
 def generate_spreadsheet(extracted_data, workbook_name='worklog.xlsx', start_row=0, start_col=0):
@@ -63,12 +64,33 @@ def generate_spreadsheet(extracted_data, workbook_name='worklog.xlsx', start_row
     workbook.close()
 
 
+def merge_data_and_desc(desc_matrix, data_matrix):
+    merged_matrix = data_matrix
+
+    for i, el in enumerate(desc_matrix):
+        desc_list = list(el)
+        merged_matrix[i].insert(0, desc_list[1])
+        merged_matrix[i].insert(0, desc_list[0])
+
+    return merged_matrix
+
+
+def print_csv_data(csv_data, sep=','):
+    csv_writer = csv.writer(sys.stdout, delimiter=sep, quoting=csv.QUOTE_NONNUMERIC,
+        strict=True, doublequote=False, escapechar='\\')
+
+    for i in range(len(csv_data)):
+        csv_writer.writerow(csv_data[i])
+
 def main(server_name, user_name, password):
     """ The main function. Initialize jira extractor, and generate spreadsheet. """
 
     jira = JiraExtractor(server_name, user_name, password)
-    generate_spreadsheet(jira.extracted_data, output_name)
+    worklog_matrix = WorklogMatrix(jira.extracted_data)
+    ##generate_spreadsheet(jira.extracted_data, output_name)
 
+    csv_data = merge_data_and_desc(worklog_matrix.description_matrix, worklog_matrix.data_matrix)
+    print_csv_data(csv_data)
     print('Total hours spent:', jira.total_time_in_seconds / 3600)
 
 
