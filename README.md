@@ -12,7 +12,23 @@ $ pip install -r requirements.txt
 
 ## Usage:
 ```
-$ python jira_worklog_sum.py -s https://example.jira.com -u username -p password
+  Options:
+    -h --help
+        Print help.
+    -s --server http://jira.example.com REQUIRED
+        JIRA server address.
+    -u --username UserName REQUIRED
+        Username.
+    -p --password SecretPassword REQUIRED
+        Password.
+    -c --csv
+        Print csv to stdout.
+    -t --sheet
+        Generate spreadsheet.
+    -o --output output.xlsx
+        The output file name. Must end with .xlsx!
+  Usage Example:
+    $ python jira_worklog_sum.py  -s https://example.jira.com -u username -p password
 ```
 
 ## Example output:
