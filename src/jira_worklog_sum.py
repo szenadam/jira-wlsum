@@ -20,13 +20,17 @@ import csv
 def usage():
     print("""Options:
     -h --help
-        Print this help.
-    -s --server http://jira.example.com
+        Print help.
+    -s --server http://jira.example.com REQUIRED
         JIRA server address.
-    -u --username UserName
+    -u --username UserName REQUIRED
         Username.
-    -p --password SecretPassword
+    -p --password SecretPassword REQUIRED
         Password.
+    -c --csv
+        Print csv to stdout.
+    -t --sheet
+        Generate spreadsheet.
     -o --output output.xlsx
         The output file name. Must end with .xlsx!
   Usage Example:
@@ -100,18 +104,20 @@ def print_csv_data(csv_data, sep=','):
         csv_writer.writerow(csv_data[i])
 
 def main():
-    """ The main function. Initialize jira extractor, and generate spreadsheet. """
+    """ The main function. Parse opts/args, get jira data, generate matrix,
+        csv or spreadsheet.
+    """
 
     output_name = 'jira-worklog-' + str(date.today()) + '.xlsx'
     server_name = ''
     user_name = ''
     password = ''
-    opts, args = [], []
+    opts = []
     output_csv = False
     output_spreadsheet = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'tchs:u:p:o:',
+        opts, [] = getopt.getopt(sys.argv[1:], 'tchs:u:p:o:',
             ['sheet', 'csv', 'help', 'server=', 'username=' 'password=', 'output='])
     except getopt.GetoptError as err:
         print(err)
@@ -129,7 +135,6 @@ def main():
         elif op in ('-p', '--password'):
             password = arg
         elif op in ('-o', '--output'):
-            print(arg)
             if arg[-4:] != 'xlsx':
                 print('Invalid output filetype!')
                 exit(1)
