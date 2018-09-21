@@ -43,8 +43,6 @@ $ pytest
 ```
 
 ## TODO:
-  * FEATURE: Generate and excel spread sheet
-  * FEATURE: CSV output to stdout. E.g: key/summary/timespent(for every day, empty for none)
   * FEATURE: Query a different users worklogs with admin
   * LONGTERM FEATURE: Eventually should create a REST API around it. Maybe with Flask or Django
   * Spreadsheet should be optional if the user wants the output to stdout
