@@ -17,6 +17,23 @@ import getopt
 import csv
 
 
+def usage():
+    print("""Options:
+    -h --help
+        Print this help.
+    -s --server http://jira.example.com
+        JIRA server address.
+    -u --username UserName
+        Username.
+    -p --password SecretPassword
+        Password.
+    -o --output output.xlsx
+        The output file name. Must end with .xlsx!
+  Usage Example:
+    $ python jira_worklog_sum.py  -s https://example.jira.com -u username -p password
+  """)
+
+
 def generate_spreadsheet(extracted_data, workbook_name='worklog.xlsx', start_row=0, start_col=0):
     """ Generate spreadsheet from data matrix """
     workbook = xlsxwriter.Workbook(workbook_name)
@@ -82,43 +99,9 @@ def print_csv_data(csv_data, sep=','):
     for i in range(len(csv_data)):
         csv_writer.writerow(csv_data[i])
 
-def main(server_name, user_name, password):
+def main():
     """ The main function. Initialize jira extractor, and generate spreadsheet. """
 
-    jira = JiraExtractor(server_name, user_name, password)
-    extracted_data = jira.extracted_data
-    worklog_matrix = WorklogMatrix(extracted_data)
-    data_matrix = worklog_matrix.data_matrix
-    description_matrix = worklog_matrix.description_matrix
-
-    if output_spreadsheet == True:
-        generate_spreadsheet(extracted_data, output_name)
-
-    if output_csv == True:
-        csv_data = merge_data_and_desc(description_matrix, data_matrix)
-        print_csv_data(csv_data)
-
-    print('Total hours spent:', jira.total_time_in_seconds / 3600)
-
-
-def usage():
-    print("""Options:
-    -h --help
-        Print this help.
-    -s --server http://jira.example.com
-        JIRA server address.
-    -u --username UserName
-        Username.
-    -p --password SecretPassword
-        Password.
-    -o --output output.xlsx
-        The output file name. Must end with .xlsx!
-  Usage Example:
-    $ python jira_worklog_sum.py  -s https://example.jira.com -u username -p password
-  """)
-
-
-if __name__ == '__main__':
     output_name = 'jira-worklog-' + str(date.today()) + '.xlsx'
     server_name = ''
     user_name = ''
@@ -157,4 +140,21 @@ if __name__ == '__main__':
             output_spreadsheet = True
         else:
             assert False, "unhandled option"
-    main(server_name, user_name, password)
+
+    jira = JiraExtractor(server_name, user_name, password)
+    extracted_data = jira.extracted_data
+    worklog_matrix = WorklogMatrix(extracted_data)
+    data_matrix = worklog_matrix.data_matrix
+    description_matrix = worklog_matrix.description_matrix
+
+    if output_spreadsheet == True:
+        generate_spreadsheet(extracted_data, output_name)
+
+    if output_csv == True:
+        csv_data = merge_data_and_desc(description_matrix, data_matrix)
+        print_csv_data(csv_data)
+
+    print('Total hours spent:', jira.total_time_in_seconds / 3600)
+
+if __name__ == '__main__':
+    main()
