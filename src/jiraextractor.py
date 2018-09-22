@@ -11,11 +11,13 @@ class JiraExtractor():
     self.total_time_in_seconds = self.get_worklogs_total_seconds(self.extracted_data)
 
 
-  def query_logged_issues(self):
+  def query_logged_issues(self, for_user='currentUser()'):
     """ Query the issues where worklogs were made by the currently logged in user
       TODO: Later should handle dates if teh user is interested in a different time range.
     """
-    logged_issues = self.jira.search_issues('worklogAuthor = currentUser() AND worklogDate >= startOfMonth() ORDER BY key ASC')
+    query_string = f'worklogAuthor = {for_user} AND worklogDate >= startOfMonth() ORDER BY key ASC'
+
+    logged_issues = self.jira.search_issues(query_string)
     return logged_issues
 
 
