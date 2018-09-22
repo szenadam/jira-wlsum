@@ -12,9 +12,17 @@ class JiraExtractor():
 
 
   def query_logged_issues(self, for_user='currentUser()', from_date='startOfMonth()', to_date='now()'):
-    """ Query the issues where worklogs were made by the currently logged in user
-      TODO: Later should handle dates if teh user is interested in a different time range.
+    """ Query the issues where worklogs were made by the given user in the given
+    time interval. Default is currentUser() and from the start of month until now.
     """
+    if from_date != 'startOfMonth()':
+        vals = list(map(int, from_date.split('-')))
+        try:
+            date(vals[0], vals[1], vals[2])
+        except IndexError as e:
+            print(e)
+            exit(1)
+
     qs_user = f'worklogAuthor = {for_user} AND '
     qs_from_date = f'worklogDate >= {from_date} AND '
     qs_to_date = f'worklogDate <= {to_date} '
