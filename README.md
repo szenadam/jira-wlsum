@@ -43,7 +43,6 @@ $ pytest
 ```
 
 ## TODO:
-  * FEATURE: Query a different users worklogs with admin
+  * FEATURE: Query a different users worklogs with admin, with different time intervals
   * LONGTERM FEATURE: Eventually should create a REST API around it. Maybe with Flask or Django
-  * Spreadsheet should be optional if the user wants the output to stdout
   * Unit tests
