@@ -112,13 +112,17 @@ def main():
     server_name = ''
     user_name = ''
     password = ''
+    for_user = 'currentUser()'
+    from_date = 'startOfMonth()'
+    to_date = 'now()'
     opts = []
     output_csv = False
     output_spreadsheet = False
 
     try:
         opts, [] = getopt.getopt(sys.argv[1:], 'tchs:u:p:o:',
-            ['sheet', 'csv', 'help', 'server=', 'username=' 'password=', 'output='])
+            ['sheet', 'csv', 'help', 'server=', 'username=' 'password=', 'output=',
+            'foruser=', 'fromdate=', 'todate='])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -143,10 +147,16 @@ def main():
             output_csv = True
         elif op in ('-t', '--sheet'):
             output_spreadsheet = True
+        elif op in ('--foruser'):
+            for_user = arg
+        elif op in ('--fromdate'):
+            from_date = arg
+        elif op in ('--todate'):
+            to_date = arg
         else:
             assert False, "unhandled option"
 
-    jira = JiraExtractor(server_name, user_name, password)
+    jira = JiraExtractor(server_name, user_name, password, for_user, from_date, to_date)
     extracted_data = jira.extracted_data
     worklog_matrix = WorklogMatrix(extracted_data)
     data_matrix = worklog_matrix.data_matrix

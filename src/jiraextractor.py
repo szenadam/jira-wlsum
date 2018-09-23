@@ -6,9 +6,9 @@ import pytz
 
 
 class JiraExtractor():
-    def __init__(self, server, username, password):
+    def __init__(self, server, username, password, for_user, from_date, to_date):
         self.jira = JIRA(server, basic_auth=(username, password))
-        self.extracted_data = self.extract_data_from_worklogs()
+        self.extracted_data = self.extract_data_from_worklogs(for_user, from_date, to_date)
         self.total_time_in_seconds = self.get_worklogs_total_seconds(self.extracted_data)
 
     def check_dates(self, from_date, to_date):
@@ -65,9 +65,9 @@ class JiraExtractor():
                     worklogs.append(worklog)
         return worklogs
 
-    def extract_data_from_worklogs(self):
+    def extract_data_from_worklogs(self, for_user, from_date, to_date):
         """ Extract only the necessary attribues from the worklog objects. """
-        logged_issues = self.query_logged_issues()
+        logged_issues = self.query_logged_issues(for_user, from_date, to_date)
         worklogs = self.get_all_worklogs_for_issues(logged_issues)
         data = []
         for worklog in worklogs:
