@@ -44,6 +44,9 @@ $ pytest
 
 ## TODO:
   * FEATURE: Query a different users worklogs with admin
-  * LONGTERM FEATURE: Eventually should create a REST API around it. Maybe with Flask or Django
+  * FEATURE: Write the required worklog hours in each month into the spreadsheet
+  * FEATURE: Be able to read a txt file with the dates of holidays in a year
+             and calculate the required worklog according to that.
+  * FEATURE (long-term): Eventually should create a REST API around it. Maybe with Flask or Django
   * Spreadsheet should be optional if the user wants the output to stdout
   * Unit tests
